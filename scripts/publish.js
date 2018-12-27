@@ -143,37 +143,37 @@ const buildTasks = options => {
           .then(() => {
             fs.move(
               `./dist/nozbe-watermelondb-v${version}.tgz`,
-              `./nozbe-watermelondb-v${version}.tgz`,
+              `./dm-watermelondb-v${version}.tgz`,
             )
           }),
     },
-    {
-      title: 'publish package',
-      task: () =>
-        listrInput('2-Factor Authentication code', {
-          validate: otp => otp.length > 0,
-          done: otp =>
-            execa('npm', [
-              'publish',
-              `./nozbe-watermelondb-v${version}.tgz`,
-              `--otp=${otp}`,
-              '--tag',
-              tag,
-            ]),
-        }),
-    },
-    {
-      title: 'git push',
-      task: () => execa('git', ['push']),
-    },
-    {
-      title: 'push tags',
-      task: () => execa('git', ['push', '--tags', '--follow-tags']),
-    },
-    {
-      title: 'cleanup',
-      task: () => fs.remove(`./nozbe-watermelondb-v${version}.tgz`),
-    },
+    // {
+    //   title: 'publish package',
+    //   task: () =>
+    //     listrInput('2-Factor Authentication code', {
+    //       validate: otp => otp.length > 0,
+    //       done: otp =>
+    //         execa('npm', [
+    //           'publish',
+    //           `./nozbe-watermelondb-v${version}.tgz`,
+    //           `--otp=${otp}`,
+    //           '--tag',
+    //           tag,
+    //         ]),
+    //     }),
+    // },
+    // {
+    //   title: 'git push',
+    //   task: () => execa('git', ['push']),
+    // },
+    // {
+    //   title: 'push tags',
+    //   task: () => execa('git', ['push', '--tags', '--follow-tags']),
+    // },
+    // {
+    //   title: 'cleanup',
+    //   task: () => fs.remove(`./nozbe-watermelondb-v${version}.tgz`),
+    // },
   ]
 }
 
