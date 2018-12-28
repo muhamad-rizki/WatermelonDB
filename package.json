@@ -33,6 +33,7 @@
     "persistence"
   ],
   "files": [
+    "*",
     "WatermelonDB.podspec"
   ],
   "repository": {
