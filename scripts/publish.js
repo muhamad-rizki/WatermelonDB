@@ -67,15 +67,6 @@ const buildTasks = options => {
   console.warn(`Will publish with NPM tag ${tag}`)
 
   return [
-    {
-      title: 'ping npm registry',
-      task: () =>
-        timeout(
-          execa.stdout('npm', ['ping']).catch(throwError('connection to npm registry failed')),
-          5000,
-          'Connection to npm registry timed out',
-        ),
-    },
     ...(isPrerelease ?
       [
           {
@@ -128,10 +119,6 @@ const buildTasks = options => {
     //   task: () => execa('yarn', ['test:android']),
     // },
     {
-      title: 'bump version',
-      task: () => execa('yarn', ['version', '--new-version', version]),
-    },
-    {
       title: 'build package',
       task: () => execa('yarn', ['build']),
     },
@@ -147,33 +134,6 @@ const buildTasks = options => {
             )
           }),
     },
-    // {
-    //   title: 'publish package',
-    //   task: () =>
-    //     listrInput('2-Factor Authentication code', {
-    //       validate: otp => otp.length > 0,
-    //       done: otp =>
-    //         execa('npm', [
-    //           'publish',
-    //           `./nozbe-watermelondb-v${version}.tgz`,
-    //           `--otp=${otp}`,
-    //           '--tag',
-    //           tag,
-    //         ]),
-    //     }),
-    // },
-    // {
-    //   title: 'git push',
-    //   task: () => execa('git', ['push']),
-    // },
-    // {
-    //   title: 'push tags',
-    //   task: () => execa('git', ['push', '--tags', '--follow-tags']),
-    // },
-    // {
-    //   title: 'cleanup',
-    //   task: () => fs.remove(`./nozbe-watermelondb-v${version}.tgz`),
-    // },
   ]
 }
 
