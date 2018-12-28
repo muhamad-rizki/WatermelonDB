@@ -126,11 +126,11 @@ const buildTasks = options => {
       title: 'pack tgz',
       task: () =>
         execa('yarn', ['pack'], { cwd: './dist' })
-          .then(() => fs.remove(`./nozbe-watermelondb-v${version}.tgz`))
+          .then(() => fs.remove(`./dm-watermelondb-v${pkg.version}.tgz`))
           .then(() => {
             fs.move(
-              `./dist/nozbe-watermelondb-v${version}.tgz`,
-              `./dm-watermelondb-v${version}.tgz`,
+              `./dist/dm-watermelondb-v${pkg.version}.tgz`,
+              `./dm-watermelondb-v${pkg.version}.tgz`,
             )
           }),
     },
