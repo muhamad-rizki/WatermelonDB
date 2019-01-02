@@ -28,53 +28,8 @@ const throwError = () => str => {
   throw new Error(str)
 }
 
-const questions = [
-  {
-    type: 'list',
-    name: 'version',
-    message: `Specify new version (current version: ${pkg.version}):`,
-    pageSize: add(increments.length, 4),
-    choices: increments
-      .map(inc => ({
-        name: `${inc} 	${semver.inc(pkg.version, inc)}`,
-        value: inc,
-      }))
-      .concat([
-        new inquirer.Separator(),
-        {
-          name: 'Other (specify)',
-          value: null,
-        },
-      ]),
-    filter: input => (belongsToIncrements(input) ? getNewVersion(input) : input),
-  },
-  {
-    type: 'input',
-    name: 'version',
-    message: 'Version:',
-    when: answers => !answers.version,
-    validate: input => isValidAndGreaterVersion(input),
-  },
-]
-
-const buildTasks = options => {
-  const { version } = options
-
-  const isPrerelease = contains('-', version)
-  const tag = isPrerelease ? 'next' : 'latest'
-
-  // eslint-disable-next-line
-  console.warn(`Will publish with NPM tag ${tag}`)
-
+const buildTasks = () => {
   return [
-    ...(isPrerelease ?
-      [
-          {
-            title: 'WARN: Skipping git checks',
-            task: () => {},
-          },
-        ] :
-      [
           {
             title: 'check current branch',
             task: () =>
@@ -96,7 +51,6 @@ const buildTasks = options => {
                 .stdout('git', ['rev-list', '--count', '--left-only', '@{u}...HEAD'])
                 .then(when(result => result !== '0', throwError('please pull changes first'))),
           },
-        ]),
     {
       title: 'check tests',
       task: () => execa('yarn', ['test']),
@@ -137,8 +91,6 @@ const buildTasks = options => {
   ]
 }
 
-inquirer.prompt(questions).then(options => {
-  const tasks = buildTasks(options)
-  const listr = new Listr(tasks)
-  listr.run()
-})
+const tasks = buildTasks()
+const listr = new Listr(tasks)
+listr.run()
