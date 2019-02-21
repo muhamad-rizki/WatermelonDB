@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.10.1 - 2019-02-12
+
+### Changes
+
+- [Android] Changed `compile` to `implementation` in Library Gradle file
+  - ⚠️ might break build if you are using Android Gradle Plugin <3.X
+- Updated `peerDependency` `react-native` to `0.57.0`
+- [Sync] Added `hasUnsyncedChanges()` helper method
+- [Sync] Improved documentation for backends that can't distinguish between `created` and `updated` records
+- [Sync] Improved diagnostics / protection against edge cases
+- [iOS] Add missing `header search path` to support **ejected** expo project.
+- [Android] Fix crash on android < 5.0
+- [iOS] `SQLiteAdapter`'s `dbName` path now allows you to pass an absolute path to a file, instead of a name
+- [Web] Add adaptive layout for demo example with smooth scrolling for iOS
+
+## 0.10.0 - 2019-01-18
+
 ### Breaking
 
 - **BREAKING:** Table column `last_modified` is no longer automatically added to all database tables. If
@@ -30,7 +47,7 @@ All notable changes to this project will be documented in this file.
   will be enabled by default, and later, made mandatory.
 
   See documentation for more details.
-- **Watermelon Sync Adapter**
+- **Watermelon Sync Adapter** (Experimental)
 
   Added `synchronize()` function that allows you to easily add full synchronization capabilities to
   your Watermelon app. You only need to provide two fetch calls to your remote server that conforms
