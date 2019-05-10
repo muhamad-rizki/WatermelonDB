@@ -7,9 +7,11 @@ import { values } from 'rambdax'
 
 import { invariant } from '../utils/common'
 
-import type { DatabaseAdapter } from '../adapters/type'
+import { CollectionChangeTypes } from '../Collection/common'
+
+import type { DatabaseAdapter, BatchOperation } from '../adapters/type'
 import type Model from '../Model'
-import type { CollectionChangeSet } from '../Collection'
+import type Collection, { CollectionChangeSet } from '../Collection'
 import type { TableName, AppSchema } from '../Schema'
 
 import CollectionMap from './CollectionMap'
@@ -30,23 +32,28 @@ export default class Database {
 
   _actionQueue = new ActionQueue()
 
-  _actionsEnabled: boolean
+  #actionsEnabled: boolean
 
   constructor({ adapter, modelClasses, actionsEnabled = false }: DatabaseProps): void {
     this.adapter = adapter
     this.schema = adapter.schema
     this.collections = new CollectionMap(this, modelClasses)
-    this._actionsEnabled = actionsEnabled
+    this.#actionsEnabled = actionsEnabled
   }
 
   // Executes multiple prepared operations
   // (made with `collection.prepareCreate` and `record.prepareUpdate`)
-  async batch(...records: $ReadOnlyArray<Model>): Promise<void> {
+  // Note: falsy values (null, undefined, false) passed to batch are just ignored
+  async batch(...records: $ReadOnlyArray<Model | null | void | false>): Promise<void> {
     this._ensureInAction(
       `Database.batch() can only be called from inside of an Action. See docs for more details.`,
     )
 
-    const operations = records.map(record => {
+    const operations: BatchOperation[] = records.reduce((ops, record) => {
+      if (!record) {
+        return ops
+      }
+
       invariant(
         !record._isCommitted || record._hasPendingUpdate,
         `Cannot batch a record that doesn't have a prepared create or prepared update`,
@@ -54,24 +61,40 @@ export default class Database {
 
       if (record._hasPendingUpdate) {
         record._hasPendingUpdate = false // TODO: What if this fails?
-        return ['update', record]
+        return ops.concat([['update', record]])
       }
 
-      return ['create', record]
-    })
+      return ops.concat([['create', record]])
+    }, [])
     await this.adapter.batch(operations)
 
+    const sortedOperations: { collection: Collection<*>, operations: CollectionChangeSet<*> }[] = []
     operations.forEach(([type, record]) => {
-      const { collection } = record
-      if (type === 'create') {
-        collection._onRecordCreated(record)
-      } else if (type === 'update') {
-        collection._onRecordUpdated(record)
+      const operation = {
+        record,
+        type: type === 'create' ? CollectionChangeTypes.created : CollectionChangeTypes.updated,
       }
+      const indexOfCollection = sortedOperations.findIndex(
+        ({ collection }) => collection === record.collection,
+      )
+      if (indexOfCollection !== -1) {
+        sortedOperations[indexOfCollection].operations.push(operation)
+      } else {
+        const { collection } = record
+        sortedOperations.push({ collection, operations: [operation] })
+      }
+    })
+    sortedOperations.forEach(({ collection, operations: operationz }) => {
+      collection.changeSet(operationz)
     })
   }
 
-  // TODO: Document me!
+  // Enqueues an Action -- a block of code that, when its ran, has a guarantee that no other Action
+  // is running at the same time.
+  // If Database is instantiated with actions enabled, all write actions (create, update, delete)
+  // must be performed inside Actions, so Actions guarantee a write lock.
+  //
+  // See docs for more details and practical guide
   action<T>(work: ActionInterface => Promise<T>, description?: string): Promise<T> {
     return this._actionQueue.enqueue(work, description)
   }
@@ -83,10 +106,26 @@ export default class Database {
     return merge$(...changesSignals).pipe(startWith(null))
   }
 
-  // This only works correctly when no Models are being observed!
+  _resetCount: number = 0
+
+  // Resets database - permanently destroys ALL records stored in the database, and sets up empty database
+  //
+  // NOTE: This is not 100% safe automatically and you must take some precautions to avoid bugs:
+  // - You must NOT hold onto any Database objects. DO NOT store or cache any records, collections, anything
+  // - You must NOT observe any record or collection or query
+  // - You SHOULD NOT have any pending (queued) Actions. Pending actions will be aborted (will reject with an error).
+  //
+  // It's best to reset your app to an empty / logged out state before doing this.
+  //
+  // Yes, this sucks and there should be some safety mechanisms or warnings. Please contribute!
   async unsafeResetDatabase(): Promise<void> {
+    this._ensureInAction(
+      `Database.unsafeResetDatabase() can only be called from inside of an Action. See docs for more details.`,
+    )
+    this._actionQueue._abortPendingActions()
     this._unsafeClearCaches()
     await this.adapter.unsafeResetDatabase()
+    this._resetCount += 1
   }
 
   _unsafeClearCaches(): void {
@@ -96,6 +135,13 @@ export default class Database {
   }
 
   _ensureInAction(error: string): void {
-    this._actionsEnabled && invariant(this._actionQueue.isRunning, error)
+    this.#actionsEnabled && invariant(this._actionQueue.isRunning, error)
+  }
+
+  _ensureActionsEnabled(): void {
+    invariant(
+      this.#actionsEnabled,
+      '[Sync] To use Sync, Actions must be enabled. Pass `{ actionsEnabled: true }` to Database constructor — see docs for more details',
+    )
   }
 }

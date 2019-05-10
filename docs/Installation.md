@@ -4,6 +4,13 @@ First, add Watermelon to your project:
 
 ```bash
 yarn add @nozbe/watermelondb
+yarn add @nozbe/with-observables
+```
+or alternatively if you prefer npm:
+
+```npm
+npm install @nozbe/watermelondb
+npm install @nozbe/with-observables
 ```
 
 ## React Native setup
@@ -12,6 +19,11 @@ yarn add @nozbe/watermelondb
     ```bash
     yarn add --dev @babel/plugin-proposal-decorators
     ```
+    or
+    
+    ```bash
+    npm install -D @babel/plugin-proposal-decorators
+    
 2. Add ES6 decorators support to your `.babelrc` file:
     ```json
     {
@@ -25,12 +37,15 @@ yarn add @nozbe/watermelondb
 
 ### iOS (React Native)
 
-1. Set up Babel config in your project — see instructions above
-2. Add Swift support to your Xcode project:
+1. **Set up Babel config in your project**
+   
+   See instructions above ⬆️
+   
+2. **Add Swift support to your Xcode project**:
    - Open `ios/YourAppName.xcodeproj` in Xcode
    - Right-click on **Your App Name** in the Project Navigator on the left, and click **New File…**
    - Create a single empty `Swift` file to the project (make sure that **Your App Name** target is selected when adding), and when Xcode asks, press **Create Bridging Header** and **do not remove `Swift`** file then.
-3. Link WatermelonDB's native library with the Xcode project:
+3. **Link WatermelonDB's native library with the Xcode project**:
 
     **Automatically**
 
@@ -44,14 +59,21 @@ yarn add @nozbe/watermelondb
 
     1. Open your project in Xcode, right click on **Libraries** in the Project Navigator on the left and click **Add Files to "Your Project Name"**. Look under `node_modules/@nozbe/watermelondb/native/ios` and select `WatermelonDB.xcodeproj`
     2. Go to Project settings (top item in the Project navigator on the left), select your app name under **Targets** → **Build Phases** → **Link Binary With Libraries**, and add `libWatermelonDB.a`
-
+    
     For more information about linking libraries manually, [see React Native documentation](https://facebook.github.io/react-native/docs/linking-libraries-ios).
+    
+    **Using CocoaPods**
+    
+    [Please contribute!](https://github.com/Nozbe/WatermelonDB/issues/279)
 
 Note that Xcode 9.4 and a deployment target of at least iOS 9.0 is required (although Xcode 10 and iOS 11.0 are recommended).
 
 ### Android (React Native)
 
-1. Set up Babel config in your project — see instructions above
+1. **Set up Babel config in your project**
+   
+   See instructions above ⬆️
+   
 1. In `android/settings.gradle`, add:
 
    ```gradle
@@ -66,13 +88,13 @@ Note that Xcode 9.4 and a deployment target of at least iOS 9.0 is required (alt
    // ...
    dependencies {
        // ...
-       compile project(':watermelondb')  // ⬅️ This!
+       implementation project(':watermelondb')  // ⬅️ This!
    }
    ```
 3. In `android/build.gradle`, add Kotlin support to the project:
    ```gradle
    buildscript {
-       ext.kotlin_version = '1.2.61'
+       ext.kotlin_version = '1.3.21'
        // ...
        dependencies {
            // ...
@@ -114,15 +136,17 @@ Note that Xcode 9.4 and a deployment target of at least iOS 9.0 is required (alt
 
 This guide assumes you use Webpack as your bundler.
 
-1. Install LokiJS dependency:
-    ```sh
-    yarn add lokijs
-    ```
-2. Install [worker-loader](https://github.com/webpack-contrib/worker-loader) Webpack plugin to add support for Web Workers to your app:
+1. Install [worker-loader](https://github.com/webpack-contrib/worker-loader) Webpack plugin to add support for Web Workers to your app:
     ```sh
     yarn add --dev worker-loader
     ```
-3. And add this to Webpack configuration:
+    or
+    
+    ```bash
+    npm install -D worker-loader
+    ```
+    
+2. And add this to Webpack configuration:
     ```js
     // webpack.config.js
     {
@@ -142,13 +166,19 @@ This guide assumes you use Webpack as your bundler.
       }
     }
     ```
-4. If you haven't already, install Babel plugins for decorators, static class properties, and async/await to get the most out of Watermelon. This assumes you use Babel 7 and already support ES6 syntax.
+3. If you haven't already, install Babel plugins for decorators, static class properties, and async/await to get the most out of Watermelon. This assumes you use Babel 7 and already support ES6 syntax.
     ```bash
     yarn add --dev @babel/plugin-proposal-decorators
     yarn add --dev @babel/plugin-proposal-class-properties
     yarn add --dev @babel/plugin-transform-runtime
     ```
-5. Add ES7 support to your `.babelrc` file:
+    or
+    ```bash
+    npm install -D @babel/plugin-proposal-decorators
+    npm install -D @babel/plugin-proposal-class-properties
+    npm install -D @babel/plugin-transform-runtime
+    ```
+4. Add ES7 support to your `.babelrc` file:
     ```json
     {
       "plugins": [

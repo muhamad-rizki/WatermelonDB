@@ -19,33 +19,82 @@ describe('Database', () => {
   })
 })
 
+describe('unsafeResetDatabase', () => {
+  it('can reset database', async () => {
+    const { database, tasks } = mockDatabase({ actionsEnabled: true })
+
+    const m1 = await database.action(() => tasks.create())
+    const m2 = await database.action(() => tasks.create())
+
+    expect(await tasks.find(m1.id)).toBe(m1)
+    expect(await tasks.find(m2.id)).toBe(m2)
+
+    // reset
+    await database.action(() => database.unsafeResetDatabase())
+
+    await expectToRejectWithMessage(tasks.find(m1.id), /not found/)
+    await expectToRejectWithMessage(tasks.find(m2.id), /not found/)
+  })
+  it('throws error if reset is called from outside an Action', async () => {
+    const { database, tasks } = mockDatabase({ actionsEnabled: true })
+    const m1 = await database.action(() => tasks.create())
+
+    await expectToRejectWithMessage(
+      database.unsafeResetDatabase(),
+      /can only be called from inside of an Action/,
+    )
+
+    expect(await tasks.find(m1.id)).toBe(m1)
+  })
+  it('increments reset count after every reset', async () => {
+    const { database } = mockDatabase({ actionsEnabled: true })
+    expect(database._resetCount).toBe(0)
+
+    await database.action(() => database.unsafeResetDatabase())
+    expect(database._resetCount).toBe(1)
+
+    await database.action(() => database.unsafeResetDatabase())
+    expect(database._resetCount).toBe(2)
+  })
+})
+
 describe('Batch writes', () => {
   it('can batch records', async () => {
-    // eslint-disable-next-line
-    let { database, cloneDatabase, tasks: collection } = mockDatabase()
+    let {
+      database,
+      // eslint-disable-next-line
+      cloneDatabase,
+      tasks: tasksCollection,
+      comments: commentsCollection,
+    } = mockDatabase({ actionsEnabled: true })
     const adapterBatchSpy = jest.spyOn(database.adapter, 'batch')
 
-    const m1 = await collection.create()
-    const m2 = await collection.create()
+    const m1 = await database.action(() => tasksCollection.create())
+    const m2 = await database.action(() => commentsCollection.create())
 
-    const collectionObserver = jest.fn()
-    collection.changes.subscribe(collectionObserver)
+    const tasksCollectionObserver = jest.fn()
+    tasksCollection.changes.subscribe(tasksCollectionObserver)
 
-    const m3 = collection.prepareCreate()
-    const m4 = collection.prepareCreate()
+    const commentsCollectionObserver = jest.fn()
+    commentsCollection.changes.subscribe(commentsCollectionObserver)
+
+    const m3 = tasksCollection.prepareCreate()
+    const m4 = commentsCollection.prepareCreate()
 
     const recordObserver = jest.fn()
     m1.observe().subscribe(recordObserver)
 
-    const batchPromise = database.batch(
-      m3,
-      m1.prepareUpdate(() => {
-        m1.name = 'bar1'
-      }),
-      m4,
-      m2.prepareUpdate(() => {
-        m2.name = 'baz1'
-      }),
+    const batchPromise = database.action(() =>
+      database.batch(
+        m4,
+        m1.prepareUpdate(() => {
+          m1.name = 'bar1'
+        }),
+        m3,
+        m2.prepareUpdate(() => {
+          m2.body = 'baz1'
+        }),
+      ),
     )
 
     expect(m1._hasPendingUpdate).toBe(false)
@@ -55,40 +104,57 @@ describe('Batch writes', () => {
 
     expect(adapterBatchSpy).toHaveBeenCalledTimes(3)
     expect(adapterBatchSpy).toHaveBeenLastCalledWith([
-      ['create', m3],
-      ['update', m1],
       ['create', m4],
+      ['update', m1],
+      ['create', m3],
       ['update', m2],
     ])
 
-    expect(collectionObserver).toHaveBeenCalledTimes(4)
-    expect(collectionObserver).toHaveBeenCalledWith([{ record: m1, type: CollectionChangeTypes.updated }])
-    expect(collectionObserver).toHaveBeenCalledWith([{ record: m2, type: CollectionChangeTypes.updated }])
+    expect(tasksCollectionObserver).toHaveBeenCalledTimes(1)
+    expect(commentsCollectionObserver).toHaveBeenCalledTimes(1)
+    expect(tasksCollectionObserver).toHaveBeenCalledWith([
+      { record: m1, type: CollectionChangeTypes.updated },
+      { record: m3, type: CollectionChangeTypes.created },
+    ])
+    expect(commentsCollectionObserver).toHaveBeenCalledWith([
+      { record: m4, type: CollectionChangeTypes.created },
+      { record: m2, type: CollectionChangeTypes.updated },
+    ])
 
     const createdRecords = [m3, m4]
     createdRecords.forEach(record => {
       expect(record._isCommitted).toBe(true)
-      expect(collection._cache.get(record.id)).toBe(record)
-      expect(collectionObserver).toHaveBeenCalledWith([{ record, type: CollectionChangeTypes.created }])
+      expect(record.collection._cache.get(record.id)).toBe(record)
     })
 
     expect(recordObserver).toHaveBeenCalledTimes(2)
 
     // simulate reload -- check if changes actually got saved
     database = cloneDatabase()
-    collection = database.collections.get('mock_tasks')
+    tasksCollection = database.collections.get('mock_tasks')
+    commentsCollection = database.collections.get('mock_comments')
 
-    const fetchedM1 = await collection.find(m1.id)
-    const fetchedM2 = await collection.find(m2.id)
+    const fetchedM1 = await tasksCollection.find(m1.id)
+    const fetchedM2 = await commentsCollection.find(m2.id)
     expect(fetchedM1.name).toBe('bar1')
-    expect(fetchedM2.name).toBe('baz1')
+    expect(fetchedM2.body).toBe('baz1')
+  })
+  it('ignores falsy values passed', async () => {
+    const { database, tasks: tasksCollection } = mockDatabase({ actionsEnabled: true })
+    const adapterBatchSpy = jest.spyOn(database.adapter, 'batch')
+
+    const model = tasksCollection.prepareCreate()
+    await database.action(() => database.batch(null, model, false, undefined))
+
+    expect(adapterBatchSpy).toHaveBeenCalledTimes(1)
+    expect(adapterBatchSpy).toHaveBeenLastCalledWith([['create', model]])
   })
   it('throws error if attempting to batch records without a pending operation', async () => {
-    const { database, tasks: collection } = mockDatabase()
-    const m1 = await collection.create()
+    const { database, tasks } = mockDatabase({ actionsEnabled: true })
+    const m1 = await database.action(() => tasks.create())
 
     await expectToRejectWithMessage(
-      database.batch(m1),
+      database.action(() => database.batch(m1)),
       /doesn't have a prepared create or prepared update/,
     )
   })
@@ -115,36 +181,42 @@ describe('Batch writes', () => {
 
 describe('Observation', () => {
   it('implements withChangesForTables', async () => {
-    const { database, projects, tasks, comments } = mockDatabase()
+    const { database, projects, tasks, comments } = mockDatabase({ actionsEnabled: true })
 
     const observer = jest.fn()
     database.withChangesForTables(['mock_projects', 'mock_tasks']).subscribe(observer)
 
     expect(observer).toHaveBeenCalledTimes(1)
 
-    await projects.create()
-    const m1 = await projects.create()
-    const m2 = await tasks.create()
-    const m3 = await comments.create()
+    await database.action(() => projects.create())
+    const m1 = await database.action(() => projects.create())
+    const m2 = await database.action(() => tasks.create())
+    const m3 = await database.action(() => comments.create())
 
     expect(observer).toHaveBeenCalledTimes(4)
     expect(observer).toHaveBeenCalledWith([{ record: m1, type: CollectionChangeTypes.created }])
     expect(observer).toHaveBeenLastCalledWith([{ record: m2, type: CollectionChangeTypes.created }])
 
-    await m1.update()
-    await m2.update()
-    await m3.update()
+    await database.action(async () => {
+      await m1.update()
+      await m2.update()
+      await m3.update()
+    })
 
     expect(observer).toHaveBeenCalledTimes(6)
     expect(observer).toHaveBeenLastCalledWith([{ record: m2, type: CollectionChangeTypes.updated }])
 
-    await m1.destroyPermanently()
-    await m2.destroyPermanently()
-    await m3.destroyPermanently()
+    await database.action(async () => {
+      await m1.destroyPermanently()
+      await m2.destroyPermanently()
+      await m3.destroyPermanently()
+    })
 
     expect(observer).toHaveBeenCalledTimes(8)
     expect(observer).toHaveBeenCalledWith([{ record: m1, type: CollectionChangeTypes.destroyed }])
-    expect(observer).toHaveBeenLastCalledWith([{ record: m2, type: CollectionChangeTypes.destroyed }])
+    expect(observer).toHaveBeenLastCalledWith([
+      { record: m2, type: CollectionChangeTypes.destroyed },
+    ])
   })
 })
 
@@ -296,5 +368,52 @@ describe('Database actions', () => {
     })
     expect(called1).toBe(1)
     expect(called2).toBe(0)
+  })
+  it('aborts all pending actions if database is reset', async () => {
+    const { database } = mockDatabase({ actionsEnabled: true })
+
+    let promise1
+    let promise2
+    let promise3
+    let dangerousActionsCalled = 0
+    let safeActionsCalled = 0
+
+    const manyActions = async () => {
+      // this will be called before reset:
+      promise1 = database.action(async () => 1)
+      await promise1
+
+      // this will be called after reset:
+      promise2 = database.action(async () => {
+        dangerousActionsCalled += 1
+      })
+      await promise2
+
+      promise3 = database.action(async () => {
+        dangerousActionsCalled += 1
+      })
+      await promise3
+    }
+
+    const promises = manyActions().catch(e => e)
+    await database.action(() => database.unsafeResetDatabase())
+
+    // actions beyond unsafe reset should be successful
+    await Promise.all([
+      database.action(async () => {
+        safeActionsCalled += 1
+      }),
+      database.action(async () => {
+        safeActionsCalled += 1
+      }),
+    ])
+
+    expect(await promises).toMatchObject({ message: expect.stringMatching(/database was reset/) })
+
+    expect(await promise1).toBe(1)
+    await expectToRejectWithMessage(promise2, /database was reset/)
+    expect(promise3).toBe(undefined) // code will never reach this point
+    expect(dangerousActionsCalled).toBe(0)
+    expect(safeActionsCalled).toBe(2)
   })
 })

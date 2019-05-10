@@ -4,6 +4,7 @@ import { logError, invariant } from '../../utils/common'
 
 import type { Model, Collection, Database } from '../..'
 import { type RawRecord, type DirtyRaw, sanitizedRaw } from '../../RawRecord'
+import type { SyncLog } from '../index'
 
 // Returns raw record with naive solution to a conflict based on local `_changed` field
 // This is a per-column resolution algorithm. All columns that were changed locally win
@@ -54,10 +55,29 @@ export function prepareCreateFromRaw<T: Model>(collection: Collection<T>, dirtyR
   })
 }
 
-export function prepareUpdateFromRaw<T: Model>(record: T, updatedDirtyRaw: DirtyRaw): T {
+export function prepareUpdateFromRaw<T: Model>(
+  record: T,
+  updatedDirtyRaw: DirtyRaw,
+  log: ?SyncLog,
+): T {
+  // Note COPY for log - only if needed
+  const logConflict = log && !!record._raw._changed
+  const logLocal = logConflict ? { ...record._raw } : {}
+  const logRemote = logConflict ? { ...updatedDirtyRaw } : {}
+
   const newRaw = resolveConflict(record._raw, updatedDirtyRaw)
   return record.prepareUpdate(() => {
     replaceRaw(record, newRaw)
+
+    // log resolved conflict - if any
+    if (logConflict && log) {
+      log.resolvedConflicts = log.resolvedConflicts || []
+      log.resolvedConflicts.push({
+        local: logLocal,
+        remote: logRemote,
+        resolved: { ...record._raw },
+      })
+    }
   })
 }
 
@@ -69,8 +89,12 @@ export function prepareMarkAsSynced<T: Model>(record: T): T {
 }
 
 export function ensureActionsEnabled(database: Database): void {
+  database._ensureActionsEnabled()
+}
+
+export function ensureSameDatabase(database: Database, initialResetCount: number): void {
   invariant(
-    database._actionsEnabled,
-    '[Sync] To use Sync, Actions must be enabled. Pass `{ actionsEnabled: true }` to Database constructor — see docs for more details',
+    database._resetCount === initialResetCount,
+    `[Sync] Sync aborted because database was reset`,
   )
 }
