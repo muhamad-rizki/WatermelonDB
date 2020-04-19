@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/Nozbe/WatermelonDB"
   s.license      = "MIT"
   s.author       = { package["author"]["name"] => package["author"]["email"] } 
-  s.source       = { :git => "https://github.com/dm-Mobile-SE-Developer/WatermelonDB.git" }
+  s.source       = { :git => "https://github.com/muhamad-rizki/WatermelonDB.git" }
 
   s.source_files = "native/ios/**/*.{swift,h,m}"
   
