@@ -2,10 +2,10 @@ package com.nozbe.watermelondb
 
 import android.content.Context
 import android.database.Cursor
-import android.database.sqlite.SQLiteDatabase
+import net.sqlcipher.database.SQLiteDatabase
 import java.io.File
 
-class Database(private val name: String, private val context: Context) {
+class Database(private val name: String, private val password: String, private val context: Context) {
 
     private val db: SQLiteDatabase by lazy {
         SQLiteDatabase.openOrCreateDatabase(

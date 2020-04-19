@@ -112,6 +112,7 @@ const makeDispatcher = (tag: ConnectionTag, isSynchronous: boolean): NativeDispa
 
 export type SQLiteAdapterOptions = $Exact<{
   dbName?: string,
+  dbPassword?: string,
   schema: AppSchema,
   migrations?: SchemaMigrations,
   synchronous?: boolean,
@@ -125,14 +126,17 @@ export default class SQLiteAdapter implements DatabaseAdapter, SQLDatabaseAdapte
   _tag: ConnectionTag = connectionTag()
 
   _dbName: string
+  
+  _dbPassword: ?string
 
   _synchronous: boolean
 
   _dispatcher: NativeDispatcher
 
   constructor(options: SQLiteAdapterOptions): void {
-    const { dbName, schema, migrations } = options
+    const { dbName, dbPassword, schema, migrations } = options
     this.schema = schema
+    this._dbPassword = dbPassword || ''
     this.migrations = migrations
     this._dbName = this._getName(dbName)
     this._synchronous = this._isSynchonous(options.synchronous)
@@ -187,7 +191,7 @@ export default class SQLiteAdapter implements DatabaseAdapter, SQLDatabaseAdapte
     // This is to speed up the launch (less to do and pass through bridge), and avoid repeating
     // migration logic inside native code
     const status = await toPromise(callback =>
-      this._dispatcher.initialize(this._dbName, this.schema.version, callback),
+      this._dispatcher.initialize(this._dbName, this._dbPassword, this.schema.version, callback),
     )
 
     // NOTE: Race condition - logic here is asynchronous, but synchronous-mode adapter does not allow
@@ -216,6 +220,7 @@ export default class SQLiteAdapter implements DatabaseAdapter, SQLDatabaseAdapte
         await toPromise(callback =>
           this._dispatcher.setUpWithMigrations(
             this._dbName,
+            this._dbPassword,
             this._encodeMigrations(migrationSteps),
             databaseVersion,
             this.schema.version,
@@ -242,6 +247,7 @@ export default class SQLiteAdapter implements DatabaseAdapter, SQLDatabaseAdapte
     await toPromise(callback =>
       this._dispatcher.setUpWithSchema(
         this._dbName,
+        this._dbPassword,
         this._encodedSchema(),
         this.schema.version,
         callback,

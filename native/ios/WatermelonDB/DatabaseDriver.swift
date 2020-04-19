@@ -12,8 +12,8 @@ class DatabaseDriver {
 
     let database: Database
 
-    convenience init(dbName: String, schemaVersion: SchemaVersion) throws {
-        self.init(dbName: dbName)
+    convenience init(dbName: String, dbPassword: String, schemaVersion: SchemaVersion) throws {
+        self.init(dbName: dbName, dbPassword: dbPassword)
 
         switch isCompatible(withVersion: schemaVersion) {
         case .compatible: break
@@ -24,8 +24,8 @@ class DatabaseDriver {
         }
     }
 
-    convenience init(dbName: String, setUpWithSchema schema: Schema) {
-        self.init(dbName: dbName)
+    convenience init(dbName: String, dbPassword: String, setUpWithSchema schema: Schema) {
+        self.init(dbName: dbName, dbPassword: dbPassword)
 
         do {
             try unsafeResetDatabase(schema: schema)
@@ -34,13 +34,13 @@ class DatabaseDriver {
         }
     }
 
-    convenience init(dbName: String, setUpWithMigrations migrations: MigrationSet) throws {
-        self.init(dbName: dbName)
+    convenience init(dbName: String, dbPassword: String, setUpWithMigrations migrations: MigrationSet) throws {
+        self.init(dbName: dbName, dbPassword: dbPassword)
         try migrate(with: migrations)
     }
 
-    private init(dbName: String) {
-        self.database = Database(path: getPath(dbName: dbName))
+    private init(dbName: String, dbPassword: String) {
+        self.database = Database(path: getPath(dbName: dbName), password: dbPassword)
     }
 
     func find(table: Database.TableName, id: RecordId) throws -> Any? {

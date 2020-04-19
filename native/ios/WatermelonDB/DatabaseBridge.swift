@@ -23,15 +23,16 @@ final public class DatabaseBridge: NSObject {
 // MARK: - Asynchronous connections
 
 extension DatabaseBridge {
-    @objc(initialize:databaseName:schemaVersion:resolve:reject:)
+    @objc(initialize:databaseName:databasePassword:schemaVersion:resolve:reject:)
     func initialize(tag: ConnectionTag,
                     databaseName: String,
+                    databasePassword: String,
                     schemaVersion: NSNumber,
                     resolve: RCTPromiseResolveBlock,
                     reject: RCTPromiseRejectBlock) {
         do {
             try assertNoConnection(tag)
-            let driver = try DatabaseDriver(dbName: databaseName, schemaVersion: schemaVersion.intValue)
+            let driver = try DatabaseDriver(dbName: databaseName, dbPassword: databasePassword, schemaVersion: schemaVersion.intValue)
             connections[tag.intValue] = .connected(driver: driver, synchronous: false)
             resolve(["code": "ok"])
         } catch _ as DatabaseDriver.SchemaNeededError {
@@ -46,22 +47,24 @@ extension DatabaseBridge {
         }
     }
 
-    @objc(setUpWithSchema:databaseName:schema:schemaVersion:resolve:reject:)
+    @objc(setUpWithSchema:databaseName:databasePassword:schema:schemaVersion:resolve:reject:)
     func setUpWithSchema(tag: ConnectionTag,
                          databaseName: String,
+                         databasePassword: String,
                          schema: Database.SQL,
                          schemaVersion: NSNumber,
                          resolve: RCTPromiseResolveBlock,
                          reject: RCTPromiseRejectBlock) {
-        let driver = DatabaseDriver(dbName: databaseName,
+        let driver = DatabaseDriver(dbName: databaseName, dbPassword: databasePassword,
                                     setUpWithSchema: (version: schemaVersion.intValue, sql: schema))
         connectDriverAsync(connectionTag: tag, driver: driver)
         resolve(true)
     }
 
-    @objc(setUpWithMigrations:databaseName:migrations:fromVersion:toVersion:resolve:reject:)
+    @objc(setUpWithMigrations:databaseName:databasePassword:migrations:fromVersion:toVersion:resolve:reject:)
     func setUpWithMigrations(tag: ConnectionTag, // swiftlint:disable:this function_parameter_count
                              databaseName: String,
+                             databasePassword: String,
                              migrations: Database.SQL,
                              fromVersion: NSNumber,
                              toVersion: NSNumber,
@@ -70,6 +73,7 @@ extension DatabaseBridge {
         do {
             let driver = try DatabaseDriver(
                 dbName: databaseName,
+                dbPassword: databasePassword,
                 setUpWithMigrations: (from: fromVersion.intValue, to: toVersion.intValue, sql: migrations)
             )
             connectDriverAsync(connectionTag: tag, driver: driver)
@@ -84,14 +88,15 @@ extension DatabaseBridge {
 // MARK: - Synchronous connections
 
 extension DatabaseBridge {
-    @objc(initializeSynchronous:databaseName:schemaVersion:)
+    @objc(initializeSynchronous:databaseName:databasePassword:schemaVersion:)
     func initializeSynchronous(tag: ConnectionTag,
                                databaseName: String,
+                               databasePassword: String,
                                schemaVersion: NSNumber) -> NSDictionary {
         return synchronously {
             do {
                 try assertNoConnection(tag)
-                let driver = try DatabaseDriver(dbName: databaseName, schemaVersion: schemaVersion.intValue)
+                let driver = try DatabaseDriver(dbName: databaseName, dbPassword: databasePassword, schemaVersion: schemaVersion.intValue)
                 connections[tag.intValue] = .connected(driver: driver, synchronous: true)
                 return ["code": "ok"]
             } catch _ as DatabaseDriver.SchemaNeededError {
@@ -105,23 +110,25 @@ extension DatabaseBridge {
         }
     }
 
-    @objc(setUpWithSchemaSynchronous:databaseName:schema:schemaVersion:)
+    @objc(setUpWithSchemaSynchronous:databaseName:databasePassword:schema:schemaVersion:)
     func setUpWithSchemaSynchronous(tag: ConnectionTag,
                                     databaseName: String,
+                                    databasePassword: String,
                                     schema: Database.SQL,
                                     schemaVersion: NSNumber) -> NSDictionary {
         return synchronously {
             try assertNoConnection(tag)
-            let driver = DatabaseDriver(dbName: databaseName,
+            let driver = DatabaseDriver(dbName: databaseName, dbPassword: databasePassword,
                                         setUpWithSchema: (version: schemaVersion.intValue, sql: schema))
             connections[tag.intValue] = .connected(driver: driver, synchronous: true)
             return true
         }
     }
 
-    @objc(setUpWithMigrationsSynchronous:databaseName:migrations:fromVersion:toVersion:)
+    @objc(setUpWithMigrationsSynchronous:databaseName:databasePassword:migrations:fromVersion:toVersion:)
     func setUpWithMigrationsSynchronous(tag: ConnectionTag,
                                         databaseName: String,
+                                        databasePassword: String,
                                         migrations: Database.SQL,
                                         fromVersion: NSNumber,
                                         toVersion: NSNumber) -> NSDictionary {
@@ -129,6 +136,7 @@ extension DatabaseBridge {
             try assertNoConnection(tag)
             let driver = try DatabaseDriver(
                 dbName: databaseName,
+                dbPassword: databasePassword,
                 setUpWithMigrations: (from: fromVersion.intValue, to: toVersion.intValue, sql: migrations)
             )
             connections[tag.intValue] = .connected(driver: driver, synchronous: true)

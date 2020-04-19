@@ -15,17 +15,20 @@
 
 WMELON_BRIDGE_METHOD(initialize,
   databaseName:(nonnull NSString *)name
+  databasePassword:(NSString *)password
   schemaVersion:(nonnull NSNumber *)version
 )
 
 WMELON_BRIDGE_METHOD(setUpWithSchema,
   databaseName:(nonnull NSString *)name
+  databasePassword:(NSString *)password
   schema:(nonnull NSString *)schema
   schemaVersion:(nonnull NSNumber *)version
 )
 
 WMELON_BRIDGE_METHOD(setUpWithMigrations,
   databaseName:(nonnull NSString *)name
+  databasePassword:(NSString *)password
   migrations:(nonnull NSString *)migrationSQL
   fromVersion:(nonnull NSNumber *)version
   toVersion:(nonnull NSNumber *)version

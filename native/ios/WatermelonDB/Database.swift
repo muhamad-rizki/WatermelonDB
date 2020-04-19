@@ -7,9 +7,11 @@ class Database {
 
     private let fmdb: FMDatabase
     private let path: String
+    private let password: String
 
-    init(path: String) {
+    init(path: String, password: String) {
         self.path = path
+        self.password = password
         fmdb = FMDatabase(path: path)
         open()
     }
@@ -19,8 +21,10 @@ class Database {
             fatalError("Failed to open the database. \(fmdb.lastErrorMessage())")
         }
         
-        guard fmdb.setKey("test") else {
-            fatalError("Failed to open the database. \(fmdb.lastErrorMessage())")
+        if !self.password.isEmpty {
+            guard fmdb.setKey(self.password) else {
+                fatalError("Failed to encrypt the database.")
+            }
         }
 
         // TODO: Experiment with WAL

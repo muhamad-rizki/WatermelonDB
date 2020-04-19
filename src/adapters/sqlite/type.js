@@ -29,9 +29,9 @@ export type SyncReturn<T> =
   | { status: 'error', code: string, message: string }
 
 export type NativeDispatcher = $Exact<{
-  initialize: (string, SchemaVersion, ResultCallback<InitializeStatus>) => void,
-  setUpWithSchema: (string, SQL, SchemaVersion, ResultCallback<void>) => void,
-  setUpWithMigrations: (string, SQL, SchemaVersion, SchemaVersion, ResultCallback<void>) => void,
+  initialize: (string, ?string, SchemaVersion, ResultCallback<InitializeStatus>) => void,
+  setUpWithSchema: (string, ?string, SQL, SchemaVersion, ResultCallback<void>) => void,
+  setUpWithMigrations: (string, ?string, SQL, SchemaVersion, SchemaVersion, ResultCallback<void>) => void,
   find: (TableName<any>, RecordId, ResultCallback<DirtyFindResult>) => void,
   query: (TableName<any>, SQL, ResultCallback<DirtyQueryResult>) => void,
   count: (SQL, ResultCallback<number>) => void,
@@ -47,9 +47,9 @@ export type NativeDispatcher = $Exact<{
 
 export type NativeBridgeType = {
   // Async methods
-  initialize: (ConnectionTag, string, SchemaVersion) => Promise<InitializeStatus>,
-  setUpWithSchema: (ConnectionTag, string, SQL, SchemaVersion) => Promise<void>,
-  setUpWithMigrations: (ConnectionTag, string, SQL, SchemaVersion, SchemaVersion) => Promise<void>,
+  initialize: (ConnectionTag, string, ?string, SchemaVersion) => Promise<InitializeStatus>,
+  setUpWithSchema: (ConnectionTag, string, ?string, SQL, SchemaVersion) => Promise<void>,
+  setUpWithMigrations: (ConnectionTag, string, ?string, SQL, SchemaVersion, SchemaVersion) => Promise<void>,
   find: (ConnectionTag, TableName<any>, RecordId) => Promise<DirtyFindResult>,
   query: (ConnectionTag, TableName<any>, SQL) => Promise<DirtyQueryResult>,
   count: (ConnectionTag, SQL) => Promise<number>,
@@ -63,10 +63,11 @@ export type NativeBridgeType = {
   removeLocal: (ConnectionTag, string) => Promise<void>,
 
   // Synchronous methods
-  initializeSynchronous?: (ConnectionTag, string, SchemaVersion) => SyncReturn<InitializeStatus>,
-  setUpWithSchemaSynchronous?: (ConnectionTag, string, SQL, SchemaVersion) => SyncReturn<void>,
+  initializeSynchronous?: (ConnectionTag, string, string, SchemaVersion) => SyncReturn<InitializeStatus>,
+  setUpWithSchemaSynchronous?: (ConnectionTag, string, string, SQL, SchemaVersion) => SyncReturn<void>,
   setUpWithMigrationsSynchronous?: (
     ConnectionTag,
+    string,
     string,
     SQL,
     SchemaVersion,
