@@ -1,5 +1,5 @@
-declare module '@nozbe/watermelondb/decorators/immutableRelation' {
-  import { ColumnName, TableName } from '@nozbe/watermelondb'
+declare module '@qsi/watermelondb/decorators/immutableRelation' {
+  import { ColumnName, TableName } from '@qsi/watermelondb'
 
   const immutableRelation: (relationTable: TableName<any>, relationIdColumn: ColumnName) => PropertyDecorator;
 

@@ -1,5 +1,5 @@
-declare module '@nozbe/watermelondb/QueryDescription' {
-  import { ColumnName, TableName } from '@nozbe/watermelondb'
+declare module '@qsi/watermelondb/QueryDescription' {
+  import { ColumnName, TableName } from '@qsi/watermelondb'
 
   export type NonNullValue = number | string | boolean
   export type Value = NonNullValue | null

@@ -1,6 +1,6 @@
-declare module '@nozbe/watermelondb/DatabaseProvider' {
+declare module '@qsi/watermelondb/DatabaseProvider' {
   import * as React from 'react'
-  import Database from '@nozbe/watermelondb/Database'
+  import Database from '@qsi/watermelondb/Database'
 
   export const DatabaseContext: React.Context<Database>
 

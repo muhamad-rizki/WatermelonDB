@@ -1,5 +1,5 @@
-declare module '@nozbe/watermelondb/observation/observeCount' {
-  import { Model, Query } from '@nozbe/watermelondb'
+declare module '@qsi/watermelondb/observation/observeCount' {
+  import { Model, Query } from '@qsi/watermelondb'
   import { Observable } from 'rxjs'
 
   export default function observeCount<Record extends Model>(

@@ -1,7 +1,7 @@
-declare module '@nozbe/watermelondb/Database' {
-  import { AppSchema, CollectionMap, DatabaseAdapter, Model, TableName } from '@nozbe/watermelondb'
-  import { CollectionChange } from '@nozbe/watermelondb/Collection'
-  import { Class } from '@nozbe/watermelondb/utils/common'
+declare module '@qsi/watermelondb/Database' {
+  import { AppSchema, CollectionMap, DatabaseAdapter, Model, TableName } from '@qsi/watermelondb'
+  import { CollectionChange } from '@qsi/watermelondb/Collection'
+  import { Class } from '@qsi/watermelondb/utils/common'
   import { Observable } from 'rxjs'
 
   export interface ActionInterface {

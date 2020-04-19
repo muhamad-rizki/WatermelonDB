@@ -1,4 +1,4 @@
-declare module '@nozbe/watermelondb/Database/helpers' {
-    import { BatchOperation } from "@nozbe/watermelondb/adapters/type";
+declare module '@qsi/watermelondb/Database/helpers' {
+    import { BatchOperation } from "@qsi/watermelondb/adapters/type";
     export const operationTypeToCollectionChangeType: (input: BatchOperation) => string
 }

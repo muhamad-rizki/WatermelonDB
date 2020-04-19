@@ -1,5 +1,5 @@
-declare module '@nozbe/watermelondb/adapters/lokijs' {
-  import { SchemaMigrations } from '@nozbe/watermelondb/Schema/migrations';
+declare module '@qsi/watermelondb/adapters/lokijs' {
+  import { SchemaMigrations } from '@qsi/watermelondb/Schema/migrations';
   import { LokiMemoryAdapter } from 'lokijs';
 
   import {
@@ -9,12 +9,12 @@ declare module '@nozbe/watermelondb/adapters/lokijs' {
     Query,
     RecordId,
     TableName,
-  } from '@nozbe/watermelondb'
+  } from '@qsi/watermelondb'
   import {
     BatchOperation,
     CachedFindResult,
     CachedQueryResult,
-  } from '@nozbe/watermelondb/adapters/type'
+  } from '@qsi/watermelondb/adapters/type'
 
   export interface LokiAdapterOptions {
     dbName?: string

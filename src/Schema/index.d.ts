@@ -1,5 +1,5 @@
-declare module '@nozbe/watermelondb/Schema' {
-  import { Model } from '@nozbe/watermelondb'
+declare module '@qsi/watermelondb/Schema' {
+  import { Model } from '@qsi/watermelondb'
 
   export type SchemaVersion = number;
 

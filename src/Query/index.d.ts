@@ -1,7 +1,7 @@
-declare module '@nozbe/watermelondb/Query' {
-  import { Collection, ColumnName, Model, TableName } from '@nozbe/watermelondb'
-  import { AssociationInfo } from '@nozbe/watermelondb/Model'
-  import { Condition, QueryDescription } from '@nozbe/watermelondb/QueryDescription'
+declare module '@qsi/watermelondb/Query' {
+  import { Collection, ColumnName, Model, TableName } from '@qsi/watermelondb'
+  import { AssociationInfo } from '@qsi/watermelondb/Model'
+  import { Condition, QueryDescription } from '@qsi/watermelondb/QueryDescription'
   import { Observable } from 'rxjs'
 
   export type AssociationArgs = [TableName<any>, AssociationInfo]
