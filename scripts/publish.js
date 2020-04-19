@@ -3,7 +3,6 @@
 // inspired by `np` – https://github.com/sindresorhus/np
 
 const Listr = require('listr')
-const listrInput = require('listr-input')
 const execa = require('execa')
 // const timeout = require('p-timeout')
 const inquirer = require('inquirer')
@@ -140,18 +139,12 @@ const buildTasks = options => {
     },
     {
       title: 'publish package',
-      task: () =>
-        listrInput('2-Factor Authentication code', {
-          validate: otp => otp.length > 0,
-          done: otp =>
-            execa('npm', [
-              'publish',
-              `./dist/qsi-watermelondb-v${version}.tgz`,
-              `--otp=${otp}`,
-              '--tag',
-              tag,
-            ]),
-        }),
+      task: () => execa('yarn', [
+        'publish',
+        `./dist/qsi-watermelondb-v${version}.tgz`,
+        '--tag',
+        tag,
+      ]),
     },
     {
       title: 'git push',
