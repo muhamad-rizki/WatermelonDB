@@ -113,7 +113,6 @@ const buildTasks = options => {
                 ),
               ),
           },
-        ]),
     {
       title: 'check tests',
       task: () => execa('yarn', ['test']),
@@ -135,10 +134,6 @@ const buildTasks = options => {
     //   title: 'check Android tests',
     //   task: () => execa('yarn', ['test:android']),
     // },
-    {
-      title: 'bump version',
-      task: () => execa('yarn', ['version', '--new-version', version]),
-    },
     {
       title: 'build package',
       task: () => execa('yarn', ['build']),
@@ -181,8 +176,6 @@ const buildTasks = options => {
   ]
 }
 
-inquirer.prompt(questions).then(options => {
-  const tasks = buildTasks(options)
-  const listr = new Listr(tasks)
-  listr.run()
-})
+const tasks = buildTasks()
+const listr = new Listr(tasks)
+listr.run()

@@ -108,7 +108,6 @@ export async function hasUnsyncedChanges({
 }: $Exact<{ database: Database }>): Promise<boolean> {
   return hasUnsyncedChangesImpl(database)
 }
-
 /*
 
 ## Sync design and implementation

@@ -62,6 +62,26 @@ module.exports = {
 
 You might also need to switch to Terser in Webpack if you use Watermelon for web.
 
+**⚠️ Note about a React Native / UglifyES bug**. When you import Watermelon Sync, your app might fail to compile in release mode. To fix this, configure Metro bundler to use Terser instead of UglifyES. Run:
+
+```bash
+yarn add metro-minify-terser
+```
+
+Then, update `metro.config.js`:
+
+```js
+module.exports = {
+  // ...
+  transformer: {
+    // ...
+    minifierPath: 'metro-minify-terser',
+  },
+}
+```
+
+You might also need to switch to Terser in Webpack if you use Watermelon for web.
+
 ### `changes` objects
 
 Changes (received from `pullChanges` and sent to `pushChanges`) are represented as an object with *raw records*. Those only use raw table and column names, and raw values (strings/numbers/booleans) — the same as in [Schema](../Schema.md).
