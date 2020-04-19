@@ -15,6 +15,6 @@ Pod::Spec.new do |s|
   s.platform     = :ios, '9.0'
   s.swift_version = '4.2'
 
-  s.dependency "FMDB", "~> 2.7"
+  s.dependency "FMDB/SQLCipher", "~> 2.7"
   s.dependency "React"
 end
