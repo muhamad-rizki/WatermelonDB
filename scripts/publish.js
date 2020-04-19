@@ -5,7 +5,7 @@
 const Listr = require('listr')
 const listrInput = require('listr-input')
 const execa = require('execa')
-const timeout = require('p-timeout')
+// const timeout = require('p-timeout')
 const inquirer = require('inquirer')
 const semver = require('semver')
 
@@ -66,15 +66,6 @@ const buildTasks = options => {
   console.warn(`Will publish with NPM tag ${tag}`)
 
   return [
-    {
-      title: 'ping npm registry',
-      task: () =>
-        timeout(
-          execa('npm', ['ping']).catch(throwError('connection to npm registry failed')),
-          5000,
-          'Connection to npm registry timed out',
-        ),
-    },
     ...(isPrerelease
       ? [
           {
@@ -113,6 +104,7 @@ const buildTasks = options => {
                 ),
               ),
           },
+        ]),
     {
       title: 'check tests',
       task: () => execa('yarn', ['test']),
@@ -135,6 +127,10 @@ const buildTasks = options => {
     //   task: () => execa('yarn', ['test:android']),
     // },
     {
+      title: 'bump version',
+      task: () => execa('yarn', ['version', '--new-version', version]),
+    },
+    {
       title: 'build package',
       task: () => execa('yarn', ['build']),
     },
@@ -150,7 +146,7 @@ const buildTasks = options => {
           done: otp =>
             execa('npm', [
               'publish',
-              `./dist/nozbe-watermelondb-v${version}.tgz`,
+              `./dist/qsi-watermelondb-v${version}.tgz`,
               `--otp=${otp}`,
               '--tag',
               tag,
@@ -176,6 +172,8 @@ const buildTasks = options => {
   ]
 }
 
-const tasks = buildTasks()
-const listr = new Listr(tasks)
-listr.run()
+inquirer.prompt(questions).then(options => {
+  const tasks = buildTasks(options)
+  const listr = new Listr(tasks)
+  listr.run()
+})
