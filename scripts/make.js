@@ -123,6 +123,7 @@ const copyNonJavaScriptFiles = buildPath => {
     'docs',
     'native/ios',
     'native/android',
+    'WatermelonDB.podspec',
   ])
   cleanFolder(`${buildPath}/native/android/build`)
   cleanFolder(`${buildPath}/native/android/bin/build`)
