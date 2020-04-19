@@ -18,6 +18,10 @@ class Database {
         guard fmdb.open() else {
             fatalError("Failed to open the database. \(fmdb.lastErrorMessage())")
         }
+        
+        guard fmdb.setKey("test") else {
+            fatalError("Failed to open the database. \(fmdb.lastErrorMessage())")
+        }
 
         // TODO: Experiment with WAL
         // do {
