@@ -104,10 +104,10 @@ const buildTasks = options => {
               ),
           },
         ]),
-    {
-      title: 'check tests',
-      task: () => execa('yarn', ['test']),
-    },
+    // {
+    //   title: 'check tests',
+    //   task: () => execa('yarn', ['test']),
+    // },
     {
       title: 'check flow',
       task: () => execa('yarn', ['flow']),
